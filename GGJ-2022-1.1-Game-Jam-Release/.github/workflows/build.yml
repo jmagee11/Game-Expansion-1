@@ -1,0 +1,82 @@
+name: Build Project
+
+on:
+  push:
+    branches:
+     - main
+
+jobs:
+  build-windows:
+    name: Create Windows build
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+      
+      # Build
+      - name: Build 
+        uses: game-ci/unity-builder@v2
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          targetPlatform: StandaloneWindows64
+          buildName: StandaloneWindows64
+
+      # Output
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build-StandaloneWindows64
+          path: build/StandaloneWindows64
+  
+  build-webgl:
+    name: Create WebGL build
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+      
+      # Build
+      - name: Build
+        uses: game-ci/unity-builder@v2
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          targetPlatform: WebGL
+          buildName: WebGL
+
+      # Output
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build-WebGL
+          path: build/WebGL
+  
+  build-android:
+    name: Create Android build
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+      
+      # Build
+      - name: Build
+        uses: game-ci/unity-builder@v2
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          targetPlatform: Android
+          buildName: Android
+
+      # Output
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build-Android
+          path: build/Android
