@@ -4,8 +4,26 @@ using UnityEngine;
 
 public class PlayerController : KiwiController
 {
-    private void FixedUpdate()
+    [SerializeField] bool safeMode;
+    [SerializeField] bool waitStep;
+
+    public void Start()
     {
+        safeMode = false;
+        waitStep = true;
+    }
+
+
+    private void Update()
+    {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        horizontalMovement = Input.acceleration.x / 2;
+        verticalMovement = Input.acceleration.y / 2;
+#else
+        horizontalMovement = Input.GetAxisRaw("Horizontal");
+
+        verticalMovement = Input.GetAxisRaw("Vertical");
+#endif
         if (!isPerformingAction && !IsDefeated)
         {
             // Moving Horizontally, not both
@@ -23,10 +41,16 @@ public class PlayerController : KiwiController
                 direction = verticalMovement * Vector3.up;
                 receivedValidInput = true;
             }
-
+                
             if (receivedValidInput && Mathf.Abs(direction.x) > .1)
             {
                 GetComponent<SpriteRenderer>().flipX = direction.x > 0;
+            }
+
+            if (Input.GetKeyDown(KeyCode.Mouse0))
+            {
+                Debug.Log("AAA");
+                waitStep = false;
             }
 
             var animator = GetComponent<Animator>();
@@ -35,8 +59,28 @@ public class PlayerController : KiwiController
             animator.SetBool("IsInteracting", false); // Set this in TryMoveOrInteract()
             if (receivedValidInput)
             {
-                TryMoveOrInteract(direction);
+                if (safeMode)
+                {
+                    if (waitStep)
+                    {
+                        if (Input.GetKeyDown(KeyCode.Mouse0))
+                        {
+                            Debug.Log("AAA");
+                            waitStep = false;
+                        }
+                    }
+                    else
+                    {
+                        TryMoveOrInteract(direction);
+                        waitStep = true;
+                    }
+                }
+                else
+                {
+                    TryMoveOrInteract(direction);
+                }
             }
+                
         }
     }
 

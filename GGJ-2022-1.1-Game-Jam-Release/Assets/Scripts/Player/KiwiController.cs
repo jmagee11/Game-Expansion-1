@@ -1,10 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterState))]
 public abstract class KiwiController : MonoBehaviour
 {
+
+    [SerializeField] bool safeMod = false;
+    [SerializeField] bool waitTurn;
+
     protected float horizontalMovement = 0;
     protected float verticalMovement = 0;
 
@@ -22,38 +27,82 @@ public abstract class KiwiController : MonoBehaviour
         verticalMovement = Input.acceleration.y / 2;
 #else
         horizontalMovement = Input.GetAxisRaw("Horizontal");
+
         verticalMovement = Input.GetAxisRaw("Vertical");
 #endif
     }
 
     public void TryMoveOrInteract(Vector3 direction)
     {
-
-        if (!TryRaycast<Transform>(direction, out var tf))
+        if(safeMod)
         {
-            // If raycast doesn't hit anything, move one space.
-            StartCoroutine(MoveOneSpace(direction));
+            if (waitTurn)
+            {
+                if (Input.GetKeyDown(KeyCode.LeftArrow))
+                {
+                    waitTurn = false;
+                }
+            }
+            else
+            {
+                if (!TryRaycast<Transform>(direction, out var tf) )
+                {
+                    // If raycast doesn't hit anything, move one space.
+                    StartCoroutine(MoveOneSpace(direction));
+                }
+                else
+                {
+                    if (TryRaycast<Interactable>(direction, out var interactable) && !interactable.isTriggered)
+                    {
+                        interactable.DoInteract(direction);
+                        StartCoroutine(WaitForInteract());
+                        print("Interaction!");
+                    }
+                    if (TryRaycast<Hazard>(direction, out var hazard))
+                    {
+                        if (hazard.isDangerActive)
+                        {
+                            // move then die
+                            StartCoroutine(MoveOneSpace(direction, true));
+                            hazard.GetComponent<AudioSource>().PlayDelayed(actionDuration);
+                        }
+                    }
+                    if (TryRaycast<KiwiController>(direction, out var kiwiController))
+                    {
+                        CollideAction();
+                    }
+                }
+                waitTurn = true;
+            }
         }
         else
         {
-            if (TryRaycast<Interactable>(direction, out var interactable) && !interactable.isTriggered)
+            if (!TryRaycast<Transform>(direction, out var tf))
             {
-                interactable.DoInteract(direction);
-                StartCoroutine(WaitForInteract());
-                print("Interaction!");
+                // If raycast doesn't hit anything, move one space.
+                StartCoroutine(MoveOneSpace(direction));
             }
-            if (TryRaycast<Hazard>(direction, out var hazard))
+            else
             {
-                if (hazard.isDangerActive)
+                if (TryRaycast<Interactable>(direction, out var interactable) && !interactable.isTriggered)
                 {
-                    // move then die
-                    StartCoroutine(MoveOneSpace(direction, true));
-                    hazard.GetComponent<AudioSource>().PlayDelayed(actionDuration);
+                    interactable.DoInteract(direction);
+                    StartCoroutine(WaitForInteract());
+                    print("Interaction!");
                 }
-            }
-            if (TryRaycast<KiwiController>(direction, out var kiwiController))
-            {
-                CollideAction();
+                if (TryRaycast<Hazard>(direction, out var hazard))
+                {
+                    if (hazard.isDangerActive)
+                    {
+                        // move then die
+                        StartCoroutine(MoveOneSpace(direction, true));
+                        hazard.GetComponent<AudioSource>().PlayDelayed(actionDuration);
+                    }
+                }
+                if (TryRaycast<KiwiController>(direction, out var kiwiController))
+                {
+                    CollideAction();
+                }
             }
         }
     }

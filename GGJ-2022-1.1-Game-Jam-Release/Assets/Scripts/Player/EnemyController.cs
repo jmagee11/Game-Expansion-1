@@ -1,9 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class EnemyController : KiwiController
 {
+    [SerializeField] bool safeMode;
+    private bool waitStep;
+
     public Direction OnLeftPress = Direction.RIGHT, 
                      OnRightPress = Direction.LEFT, 
                      OnUpPress = Direction.DOWN, 
@@ -17,9 +21,20 @@ public class EnemyController : KiwiController
         directionMap.Add(Direction.LEFT, Vector3.left);
         directionMap.Add(Direction.UP, Vector3.up);
         directionMap.Add(Direction.DOWN, Vector3.down);
+
+        safeMode = false;
+        waitStep = true;
     }
-    private void FixedUpdate()
+    private void Update()
     {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        horizontalMovement = Input.acceleration.x / 2;
+        verticalMovement = Input.acceleration.y / 2;
+#else
+        horizontalMovement = Input.GetAxisRaw("Horizontal");
+
+        verticalMovement = Input.GetAxisRaw("Vertical");
+#endif
         if (!isPerformingAction && !IsDefeated)
         {
             // Moving Horizontally, not both
@@ -61,6 +76,12 @@ public class EnemyController : KiwiController
                 GetComponent<SpriteRenderer>().flipX = direction.x > 0;
             }
 
+            /*if (Input.GetKeyDown(KeyCode.LeftArrow))
+            {
+                Debug.Log("AAA");
+                waitStep = false;
+            }*/
+
             var animator = GetComponent<Animator>();
             animator.SetFloat("HorizontalMovement", direction.x);
             animator.SetFloat("VerticalMovement", direction.y);
@@ -68,7 +89,28 @@ public class EnemyController : KiwiController
 
             if (receivedValidInput)
             {
-                TryMoveOrInteract(direction);
+                if (safeMode)
+                {
+                    if (waitStep)
+                    {
+                        if (Input.GetKeyDown(KeyCode.LeftArrow))
+                        {
+                            Debug.Log("AAA");
+                            waitStep = false;
+                        }
+                    }
+                    else
+                    {
+                        TryMoveOrInteract(direction);
+                        waitStep = true;
+                    }
+                }
+                else
+                {
+                    TryMoveOrInteract(direction);
+                }
+
+
             }
         }
     }
