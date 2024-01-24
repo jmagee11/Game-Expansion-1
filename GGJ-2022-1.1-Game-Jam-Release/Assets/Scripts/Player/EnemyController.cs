@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class EnemyController : KiwiController
 {
-    [SerializeField] bool safeMode;
     private bool waitStep;
 
     public Direction OnLeftPress = Direction.RIGHT, 
@@ -22,7 +21,6 @@ public class EnemyController : KiwiController
         directionMap.Add(Direction.UP, Vector3.up);
         directionMap.Add(Direction.DOWN, Vector3.down);
 
-        safeMode = false;
         waitStep = true;
     }
     private void Update()
@@ -76,11 +74,10 @@ public class EnemyController : KiwiController
                 GetComponent<SpriteRenderer>().flipX = direction.x > 0;
             }
 
-            /*if (Input.GetKeyDown(KeyCode.LeftArrow))
+            if (Input.GetKeyDown(KeyCode.Return))
             {
-                Debug.Log("AAA");
                 waitStep = false;
-            }*/
+            }
 
             var animator = GetComponent<Animator>();
             animator.SetFloat("HorizontalMovement", direction.x);
@@ -91,15 +88,7 @@ public class EnemyController : KiwiController
             {
                 if (safeMode)
                 {
-                    if (waitStep)
-                    {
-                        if (Input.GetKeyDown(KeyCode.LeftArrow))
-                        {
-                            Debug.Log("AAA");
-                            waitStep = false;
-                        }
-                    }
-                    else
+                    if (!waitStep)
                     {
                         TryMoveOrInteract(direction);
                         waitStep = true;

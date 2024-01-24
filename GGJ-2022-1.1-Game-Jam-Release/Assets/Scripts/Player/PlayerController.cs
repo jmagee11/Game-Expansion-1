@@ -4,12 +4,10 @@ using UnityEngine;
 
 public class PlayerController : KiwiController
 {
-    [SerializeField] bool safeMode;
     [SerializeField] bool waitStep;
 
     public void Start()
     {
-        safeMode = false;
         waitStep = true;
     }
 
@@ -47,9 +45,9 @@ public class PlayerController : KiwiController
                 GetComponent<SpriteRenderer>().flipX = direction.x > 0;
             }
 
-            if (Input.GetKeyDown(KeyCode.Mouse0))
+            
+            if (Input.GetKeyDown(KeyCode.Return))
             {
-                Debug.Log("AAA");
                 waitStep = false;
             }
 
@@ -61,15 +59,7 @@ public class PlayerController : KiwiController
             {
                 if (safeMode)
                 {
-                    if (waitStep)
-                    {
-                        if (Input.GetKeyDown(KeyCode.Mouse0))
-                        {
-                            Debug.Log("AAA");
-                            waitStep = false;
-                        }
-                    }
-                    else
+                    if (!waitStep)
                     {
                         TryMoveOrInteract(direction);
                         waitStep = true;

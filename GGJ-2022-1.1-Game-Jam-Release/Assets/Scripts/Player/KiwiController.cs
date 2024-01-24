@@ -6,10 +6,7 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterState))]
 public abstract class KiwiController : MonoBehaviour
 {
-
-    [SerializeField] bool safeMod = false;
-    [SerializeField] bool waitTurn;
-
+    [SerializeField] protected bool safeMode = false;
     protected float horizontalMovement = 0;
     protected float verticalMovement = 0;
 
@@ -33,76 +30,31 @@ public abstract class KiwiController : MonoBehaviour
     }
 
     public void TryMoveOrInteract(Vector3 direction)
-    {
-        if(safeMod)
+    {         
+        if (!TryRaycast<Transform>(direction, out var tf))
         {
-            if (waitTurn)
-            {
-                if (Input.GetKeyDown(KeyCode.LeftArrow))
-                {
-                    waitTurn = false;
-                }
-            }
-            else
-            {
-                if (!TryRaycast<Transform>(direction, out var tf) )
-                {
-                    // If raycast doesn't hit anything, move one space.
-                    StartCoroutine(MoveOneSpace(direction));
-                }
-                else
-                {
-                    if (TryRaycast<Interactable>(direction, out var interactable) && !interactable.isTriggered)
-                    {
-                        interactable.DoInteract(direction);
-                        StartCoroutine(WaitForInteract());
-                        print("Interaction!");
-                    }
-                    if (TryRaycast<Hazard>(direction, out var hazard))
-                    {
-                        if (hazard.isDangerActive)
-                        {
-                            // move then die
-                            StartCoroutine(MoveOneSpace(direction, true));
-                            hazard.GetComponent<AudioSource>().PlayDelayed(actionDuration);
-                        }
-                    }
-                    if (TryRaycast<KiwiController>(direction, out var kiwiController))
-                    {
-                        CollideAction();
-                    }
-                }
-                waitTurn = true;
-            }
+                // If raycast doesn't hit anything, move one space.
+            StartCoroutine(MoveOneSpace(direction));
         }
         else
         {
-            if (!TryRaycast<Transform>(direction, out var tf))
+            if (TryRaycast<Interactable>(direction, out var interactable) && !interactable.isTriggered)
             {
-                // If raycast doesn't hit anything, move one space.
-                StartCoroutine(MoveOneSpace(direction));
+                interactable.DoInteract(direction);
+                StartCoroutine(WaitForInteract());
+                print("Interaction!");
             }
-            else
+            if (TryRaycast<Hazard>(direction, out var hazard))
             {
-                if (TryRaycast<Interactable>(direction, out var interactable) && !interactable.isTriggered)
+                if (hazard.isDangerActive)
                 {
-                    interactable.DoInteract(direction);
-                    StartCoroutine(WaitForInteract());
-                    print("Interaction!");
+                    // move then die
+                    StartCoroutine(MoveOneSpace(direction, true));
+                    hazard.GetComponent<AudioSource>().PlayDelayed(actionDuration);                 }
                 }
-                if (TryRaycast<Hazard>(direction, out var hazard))
-                {
-                    if (hazard.isDangerActive)
-                    {
-                        // move then die
-                        StartCoroutine(MoveOneSpace(direction, true));
-                        hazard.GetComponent<AudioSource>().PlayDelayed(actionDuration);
-                    }
-                }
-                if (TryRaycast<KiwiController>(direction, out var kiwiController))
-                {
-                    CollideAction();
-                }
+            if (TryRaycast<KiwiController>(direction, out var kiwiController))
+            {
+                CollideAction();
             }
         }
     }
@@ -167,6 +119,11 @@ public abstract class KiwiController : MonoBehaviour
             GetComponent<Animator>().SetBool("IsDead", true);
             DeathEffect();
         }
+    }
+
+    public void toggleSafeMode()
+    {
+        safeMode = !safeMode;
     }
 
     public abstract void CollideAction();
