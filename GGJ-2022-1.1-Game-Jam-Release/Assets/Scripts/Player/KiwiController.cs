@@ -7,6 +7,7 @@ using UnityEngine;
 public abstract class KiwiController : MonoBehaviour
 {
     [SerializeField] protected bool safeMode = false;
+    [SerializeField] protected GameObject arrow;
     protected float horizontalMovement = 0;
     protected float verticalMovement = 0;
 
@@ -123,9 +124,19 @@ public abstract class KiwiController : MonoBehaviour
 
     public void toggleSafeMode()
     {
+        deleteArrows();
         safeMode = !safeMode;
     }
 
+    public void deleteArrows()
+    {
+        GameObject[] arrows = GameObject.FindGameObjectsWithTag("arrow");
+
+        foreach (GameObject ar in arrows)
+        {
+            Destroy(ar);
+        }
+    }
     public abstract void CollideAction();
 
     public abstract void DeathEffect();

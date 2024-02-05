@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Enemy
   - Music
+  - arrow
   layers:
   - Default
   - TransparentFX

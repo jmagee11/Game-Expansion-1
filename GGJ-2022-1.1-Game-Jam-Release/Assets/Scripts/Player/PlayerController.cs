@@ -43,9 +43,15 @@ public class PlayerController : KiwiController
             if (receivedValidInput && Mathf.Abs(direction.x) > .1)
             {
                 GetComponent<SpriteRenderer>().flipX = direction.x > 0;
+                arrow.GetComponent<SpriteRenderer>().flipX = direction.x < 0;
             }
 
-            
+            bool up = false;
+            if (receivedValidInput && Mathf.Abs(direction.y) > .1)
+            {
+                up = direction.y < 0;
+            }
+
             if (Input.GetKeyDown(KeyCode.Return))
             {
                 waitStep = false;
@@ -61,8 +67,29 @@ public class PlayerController : KiwiController
                 {
                     if (!waitStep)
                     {
+                        deleteArrows();
                         TryMoveOrInteract(direction);
                         waitStep = true;
+                    }
+                    else
+                    {
+                        if (Mathf.Abs(direction.x) > .1)
+                        {
+                            Instantiate(arrow, transform.position + direction.normalized, Quaternion.identity);
+                        }
+                        else
+                        {
+                            int upOrDown;
+                            if (up)
+                            {
+                                upOrDown = -1;
+                            }
+                            else
+                            {
+                                upOrDown = 1;
+                            }
+                            Instantiate(arrow, transform.position + direction.normalized, Quaternion.Euler(new Vector3(0, 0, 90 * upOrDown)));
+                        }
                     }
                 }
                 else
